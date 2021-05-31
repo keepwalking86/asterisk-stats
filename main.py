@@ -30,6 +30,7 @@ manager.loop.set_debug(True)
 
 channels_current = {} # Current channels gauge
 sip_reachable_peers = set()
+sip_unreachable_peers = set()
 
 def main():
     logger.info('Connecting to {}:{}.'.format(AMI_HOST, AMI_PORT))
@@ -114,9 +115,10 @@ def on_asterisk_PeerStatus(manager, msg):
     if msg.PeerStatus in ['Reachable', 'Registered']:
         sip_reachable_peers.add(msg.Peer)
     elif msg.PeerStatus in ['Unreachable', 'Unregistered']:
-        sip_reachable_peers.discard(msg.Peer)
+        sip_unreachable_peers.add(msg.Peer)
     logger.debug('event: {}, peer: {}, status: {}'.format(msg.Event, msg.Peer, msg.PeerStatus))
     stats.gauge('asterisk_sip_reachable_peers', len(sip_reachable_peers))
+    stats.gauge('asterisk_sip_unreachable_peers', len(sip_unreachable_peers))
 
     
 def on_asterisk_DialBegin(manager, msg):
